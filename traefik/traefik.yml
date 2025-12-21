@@ -1,0 +1,23 @@
+# Traefik Static Configuration
+# This file configures Traefik's core settings
+
+api:
+  dashboard: true
+  insecure: true  # Enable dashboard without authentication (dev only)
+
+entryPoints:
+  web:
+    address: ":80"
+  websecure:
+    address: ":443"
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false  # Only expose services with traefik.enable=true label
+    network: ecommerce_ecommerce-network
+
+log:
+  level: INFO
+
+accessLog: {}  # Enable access logging

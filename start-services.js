@@ -1,6 +1,13 @@
 /**
  * Start all microservices concurrently
  * Run with: node start-services.js
+ * 
+ * NOTE: This starts services for LOCAL DEVELOPMENT without Docker.
+ * For the full experience with Traefik API Gateway, use:
+ *   docker-compose up
+ * 
+ * Traefik Dashboard: http://localhost:8080
+ * API Gateway: http://localhost (port 80)
  */
 
 const { spawn } = require('child_process');
@@ -13,12 +20,14 @@ const services = [
   { name: 'order-service', port: 3004, dir: 'services/order-service' },
   { name: 'payment-service', port: 3005, dir: 'services/payment-service' },
   { name: 'notification-service', port: 3006, dir: 'services/notification-service' },
-  { name: 'gateway', port: 8000, dir: 'gateway' },
+  // Note: Traefik API Gateway runs via Docker, not here.
+  // Use 'docker-compose up traefik' to start the gateway.
 ];
 
 const processes = [];
 
 console.log('🚀 Starting E-Commerce Microservices Platform...\n');
+console.log('💡 TIP: For Traefik API Gateway, run: docker-compose up traefik\n');
 
 services.forEach((service) => {
   const servicePath = path.join(__dirname, service.dir);

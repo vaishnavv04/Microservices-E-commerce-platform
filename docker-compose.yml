@@ -1,7 +1,33 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Databases
+  # ===========================================
+  # TRAEFIK API GATEWAY
+  # ===========================================
+  traefik:
+    image: traefik:v3.0
+    container_name: ecommerce-traefik
+    command:
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=ecommerce_ecommerce-network"
+      - "--entrypoints.web.address=:80"
+      - "--log.level=INFO"
+      - "--accesslog=true"
+    ports:
+      - "80:80" # HTTP entrypoint
+      - "8080:8080" # Traefik Dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - ecommerce-network
+    restart: unless-stopped
+
+  # ===========================================
+  # DATABASES
+  # ===========================================
   postgres-users:
     image: postgres:15-alpine
     container_name: ecommerce-postgres-users
@@ -44,23 +70,6 @@ services:
     networks:
       - ecommerce-network
 
-  # Redis for Cart Service
-  redis:
-    image: redis:7-alpine
-    container_name: ecommerce-redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    command: redis-server --appendonly yes
-    healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - ecommerce-network
-
   postgres-orders:
     image: postgres:15-alpine
     container_name: ecommerce-postgres-orders
@@ -82,7 +91,25 @@ services:
     networks:
       - ecommerce-network
 
-  # User Service
+  redis:
+    image: redis:7-alpine
+    container_name: ecommerce-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecommerce-network
+
+  # ===========================================
+  # MICROSERVICES
+  # ===========================================
   user-service:
     build:
       context: ./services/user-service
@@ -100,16 +127,22 @@ services:
       DB_NAME: ecommerce_users
       DB_USER: ${POSTGRES_USER:-postgres}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-    ports:
-      - "3001:3001"
+    expose:
+      - "3001"
     depends_on:
       postgres-users:
         condition: service_healthy
     networks:
       - ecommerce-network
     restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.user-service.rule=PathPrefix(`/api/users`)"
+      - "traefik.http.routers.user-service.entrypoints=web"
+      - "traefik.http.services.user-service.loadbalancer.server.port=3001"
+      - "traefik.http.middlewares.user-strip.stripprefix.prefixes=/api/users"
+      - "traefik.http.routers.user-service.middlewares=user-strip"
 
-  # Product Service
   product-service:
     build:
       context: ./services/product-service
@@ -125,16 +158,22 @@ services:
       DB_NAME: ecommerce_products
       DB_USER: ${POSTGRES_USER:-postgres}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-    ports:
-      - "3002:3002"
+    expose:
+      - "3002"
     depends_on:
       postgres-products:
         condition: service_healthy
     networks:
       - ecommerce-network
     restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.product-service.rule=PathPrefix(`/api/products`)"
+      - "traefik.http.routers.product-service.entrypoints=web"
+      - "traefik.http.services.product-service.loadbalancer.server.port=3002"
+      - "traefik.http.middlewares.product-strip.stripprefix.prefixes=/api/products"
+      - "traefik.http.routers.product-service.middlewares=product-strip"
 
-  # Cart Service
   cart-service:
     build:
       context: ./services/cart-service
@@ -148,8 +187,8 @@ services:
       REDIS_URL: redis://redis:6379
       USER_SERVICE_URL: http://user-service:3001
       PRODUCT_SERVICE_URL: http://product-service:3002
-    ports:
-      - "3003:3003"
+    expose:
+      - "3003"
     depends_on:
       redis:
         condition: service_healthy
@@ -160,8 +199,14 @@ services:
     networks:
       - ecommerce-network
     restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.cart-service.rule=PathPrefix(`/api/cart`)"
+      - "traefik.http.routers.cart-service.entrypoints=web"
+      - "traefik.http.services.cart-service.loadbalancer.server.port=3003"
+      - "traefik.http.middlewares.cart-strip.stripprefix.prefixes=/api/cart"
+      - "traefik.http.routers.cart-service.middlewares=cart-strip"
 
-  # Order Service
   order-service:
     build:
       context: ./services/order-service
@@ -181,8 +226,8 @@ services:
       PAYMENT_SERVICE_URL: http://payment-service:3005
       NOTIFICATION_SERVICE_URL: http://notification-service:3006
       PRODUCT_SERVICE_URL: http://product-service:3002
-    ports:
-      - "3004:3004"
+    expose:
+      - "3004"
     depends_on:
       - postgres-orders
       - cart-service
@@ -192,8 +237,14 @@ services:
     networks:
       - ecommerce-network
     restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.order-service.rule=PathPrefix(`/api/orders`)"
+      - "traefik.http.routers.order-service.entrypoints=web"
+      - "traefik.http.services.order-service.loadbalancer.server.port=3004"
+      - "traefik.http.middlewares.order-strip.stripprefix.prefixes=/api/orders"
+      - "traefik.http.routers.order-service.middlewares=order-strip"
 
-  # Payment Service
   payment-service:
     build:
       context: ./services/payment-service
@@ -206,13 +257,19 @@ services:
       NODE_ENV: production
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-sk_test_your_stripe_secret_key}
       STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-pk_test_your_stripe_publishable_key}
-    ports:
-      - "3005:3005"
+    expose:
+      - "3005"
     networks:
       - ecommerce-network
     restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.payment-service.rule=PathPrefix(`/api/payments`)"
+      - "traefik.http.routers.payment-service.entrypoints=web"
+      - "traefik.http.services.payment-service.loadbalancer.server.port=3005"
+      - "traefik.http.middlewares.payment-strip.stripprefix.prefixes=/api/payments"
+      - "traefik.http.routers.payment-service.middlewares=payment-strip"
 
-  # Notification Service
   notification-service:
     build:
       context: ./services/notification-service
@@ -228,41 +285,18 @@ services:
       TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-your_twilio_account_sid}
       TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-your_twilio_auth_token}
       TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER:-your_twilio_phone_number}
-    ports:
-      - "3006:3006"
+    expose:
+      - "3006"
     networks:
       - ecommerce-network
     restart: unless-stopped
-
-  # API Gateway
-  gateway:
-    build:
-      context: ./gateway
-      dockerfile: Dockerfile
-    container_name: ecommerce-gateway
-    env_file:
-      - .env
-    environment:
-      PORT: 8000
-      NODE_ENV: production
-      USER_SERVICE_URL: http://user-service:3001
-      PRODUCT_SERVICE_URL: http://product-service:3002
-      CART_SERVICE_URL: http://cart-service:3003
-      ORDER_SERVICE_URL: http://order-service:3004
-      PAYMENT_SERVICE_URL: http://payment-service:3005
-      NOTIFICATION_SERVICE_URL: http://notification-service:3006
-    ports:
-      - "8000:8000"
-    depends_on:
-      - user-service
-      - product-service
-      - cart-service
-      - order-service
-      - payment-service
-      - notification-service
-    networks:
-      - ecommerce-network
-    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.notification-service.rule=PathPrefix(`/api/notifications`)"
+      - "traefik.http.routers.notification-service.entrypoints=web"
+      - "traefik.http.services.notification-service.loadbalancer.server.port=3006"
+      - "traefik.http.middlewares.notification-strip.stripprefix.prefixes=/api/notifications"
+      - "traefik.http.routers.notification-service.middlewares=notification-strip"
 
 networks:
   ecommerce-network:
@@ -273,5 +307,3 @@ volumes:
   postgres_products_data:
   postgres_orders_data:
   redis_data:
-
-

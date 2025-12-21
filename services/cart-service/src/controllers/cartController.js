@@ -1,56 +1,33 @@
-const { pool } = require('../utils/database');
+const { redisClient } = require('../utils/redis');
 const { getProduct } = require('../utils/serviceClient');
+
+// Helper to generate cart key
+const getCartKey = (userId) => `cart:${userId}`;
 
 const getCart = async (req, res) => {
   try {
     const { userId } = req.params;
+    const cartKey = getCartKey(userId);
 
-    // Get or create cart
-    let cartResult = await pool.query(
-      'SELECT id FROM cart WHERE user_id = $1',
-      [userId]
-    );
+    // Get all items from cart hash
+    const cartData = await redisClient.hGetAll(cartKey);
 
-    let cartId;
-    if (cartResult.rows.length === 0) {
-      const newCart = await pool.query(
-        'INSERT INTO cart (user_id) VALUES ($1) RETURNING id',
-        [userId]
-      );
-      cartId = newCart.rows[0].id;
-    } else {
-      cartId = cartResult.rows[0].id;
-    }
-
-    // Get cart items
-    const itemsResult = await pool.query(
-      `SELECT 
-        ci.id,
-        ci.product_id,
-        ci.quantity,
-        ci.created_at
-      FROM cart_items ci
-      WHERE ci.cart_id = $1
-      ORDER BY ci.created_at DESC`,
-      [cartId]
-    );
-
-    // Fetch product details for each item
+    // Convert hash data to items array with product details
     const items = await Promise.all(
-      itemsResult.rows.map(async (item) => {
+      Object.entries(cartData).map(async ([productId, quantity]) => {
         try {
-          const product = await getProduct(item.product_id);
+          const product = await getProduct(productId);
           return {
-            id: item.id,
-            product_id: item.product_id,
-            quantity: item.quantity,
+            id: `${userId}-${productId}`,
+            product_id: parseInt(productId),
+            quantity: parseInt(quantity),
             product: product || null,
           };
         } catch (error) {
           return {
-            id: item.id,
-            product_id: item.product_id,
-            quantity: item.quantity,
+            id: `${userId}-${productId}`,
+            product_id: parseInt(productId),
+            quantity: parseInt(quantity),
             product: null,
           };
         }
@@ -58,7 +35,6 @@ const getCart = async (req, res) => {
     );
 
     res.json({
-      cart_id: cartId,
       user_id: parseInt(userId),
       items,
     });
@@ -83,42 +59,22 @@ const addItem = async (req, res) => {
       return res.status(400).json({ error: 'Insufficient inventory' });
     }
 
-    // Get or create cart
-    let cartResult = await pool.query(
-      'SELECT id FROM cart WHERE user_id = $1',
-      [userId]
-    );
+    const cartKey = getCartKey(userId);
 
-    let cartId;
-    if (cartResult.rows.length === 0) {
-      const newCart = await pool.query(
-        'INSERT INTO cart (user_id) VALUES ($1) RETURNING id',
-        [userId]
-      );
-      cartId = newCart.rows[0].id;
-    } else {
-      cartId = cartResult.rows[0].id;
-    }
+    // Get current quantity (if exists)
+    const currentQty = await redisClient.hGet(cartKey, productId.toString());
+    const newQuantity = currentQty ? parseInt(currentQty) + quantity : quantity;
 
-    // Add or update item
-    const result = await pool.query(
-      `INSERT INTO cart_items (cart_id, product_id, quantity)
-       VALUES ($1, $2, $3)
-       ON CONFLICT (cart_id, product_id)
-       DO UPDATE SET quantity = cart_items.quantity + $3, updated_at = CURRENT_TIMESTAMP
-       RETURNING id, product_id, quantity`,
-      [cartId, productId, quantity]
-    );
-
-    // Update cart timestamp
-    await pool.query(
-      'UPDATE cart SET updated_at = CURRENT_TIMESTAMP WHERE id = $1',
-      [cartId]
-    );
+    // Add/update item in cart
+    await redisClient.hSet(cartKey, productId.toString(), newQuantity.toString());
 
     res.status(201).json({
       message: 'Item added to cart',
-      item: result.rows[0],
+      item: {
+        id: `${userId}-${productId}`,
+        product_id: productId,
+        quantity: newQuantity,
+      },
     });
   } catch (error) {
     console.error('Add item error:', error);
@@ -135,20 +91,22 @@ const updateItem = async (req, res) => {
       return res.status(400).json({ error: 'Quantity must be greater than 0' });
     }
 
-    // Get item to check product
-    const itemResult = await pool.query(
-      'SELECT product_id, cart_id FROM cart_items WHERE id = $1',
-      [itemId]
-    );
+    // Parse itemId (format: userId-productId)
+    const [userId, productId] = itemId.split('-');
+    if (!userId || !productId) {
+      return res.status(400).json({ error: 'Invalid item ID format' });
+    }
 
-    if (itemResult.rows.length === 0) {
+    const cartKey = getCartKey(userId);
+
+    // Check if item exists
+    const exists = await redisClient.hExists(cartKey, productId);
+    if (!exists) {
       return res.status(404).json({ error: 'Cart item not found' });
     }
 
-    const { product_id, cart_id } = itemResult.rows[0];
-
     // Verify product and check inventory
-    const product = await getProduct(product_id);
+    const product = await getProduct(productId);
     if (!product) {
       return res.status(404).json({ error: 'Product not found' });
     }
@@ -157,24 +115,16 @@ const updateItem = async (req, res) => {
       return res.status(400).json({ error: 'Insufficient inventory' });
     }
 
-    // Update item
-    const result = await pool.query(
-      `UPDATE cart_items 
-       SET quantity = $1, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $2
-       RETURNING id, product_id, quantity`,
-      [quantity, itemId]
-    );
-
-    // Update cart timestamp
-    await pool.query(
-      'UPDATE cart SET updated_at = CURRENT_TIMESTAMP WHERE id = $1',
-      [cart_id]
-    );
+    // Update item quantity
+    await redisClient.hSet(cartKey, productId, quantity.toString());
 
     res.json({
       message: 'Cart item updated',
-      item: result.rows[0],
+      item: {
+        id: itemId,
+        product_id: parseInt(productId),
+        quantity,
+      },
     });
   } catch (error) {
     console.error('Update item error:', error);
@@ -186,20 +136,22 @@ const removeItem = async (req, res) => {
   try {
     const { itemId } = req.params;
 
-    const result = await pool.query(
-      'DELETE FROM cart_items WHERE id = $1 RETURNING cart_id',
-      [itemId]
-    );
+    // Parse itemId (format: userId-productId)
+    const [userId, productId] = itemId.split('-');
+    if (!userId || !productId) {
+      return res.status(400).json({ error: 'Invalid item ID format' });
+    }
 
-    if (result.rows.length === 0) {
+    const cartKey = getCartKey(userId);
+
+    // Check if item exists
+    const exists = await redisClient.hExists(cartKey, productId);
+    if (!exists) {
       return res.status(404).json({ error: 'Cart item not found' });
     }
 
-    // Update cart timestamp
-    await pool.query(
-      'UPDATE cart SET updated_at = CURRENT_TIMESTAMP WHERE id = $1',
-      [result.rows[0].cart_id]
-    );
+    // Remove item from cart
+    await redisClient.hDel(cartKey, productId);
 
     res.json({ message: 'Item removed from cart' });
   } catch (error) {
@@ -211,26 +163,16 @@ const removeItem = async (req, res) => {
 const clearCart = async (req, res) => {
   try {
     const { userId } = req.params;
+    const cartKey = getCartKey(userId);
 
-    const cartResult = await pool.query(
-      'SELECT id FROM cart WHERE user_id = $1',
-      [userId]
-    );
-
-    if (cartResult.rows.length === 0) {
+    // Check if cart exists
+    const exists = await redisClient.exists(cartKey);
+    if (!exists) {
       return res.status(404).json({ error: 'Cart not found' });
     }
 
-    const cartId = cartResult.rows[0].id;
-
-    // Delete all items
-    await pool.query('DELETE FROM cart_items WHERE cart_id = $1', [cartId]);
-
-    // Update cart timestamp
-    await pool.query(
-      'UPDATE cart SET updated_at = CURRENT_TIMESTAMP WHERE id = $1',
-      [cartId]
-    );
+    // Delete entire cart
+    await redisClient.del(cartKey);
 
     res.json({ message: 'Cart cleared' });
   } catch (error) {
@@ -246,4 +188,3 @@ module.exports = {
   removeItem,
   clearCart,
 };
-

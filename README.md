@@ -1,26 +1,27 @@
 # E-Commerce Microservices Platform
 
-A scalable e-commerce platform built with microservices architecture using Node.js, Express, PostgreSQL, and Docker.
+A scalable e-commerce platform built with microservices architecture using Node.js, Express, PostgreSQL, Redis, and Docker.
 
 ## Architecture
 
 The platform consists of 7 services:
 
-| Service | Port | Description |
-|---------|------|-------------|
-| **API Gateway** | 8000 | Central entry point for all API requests |
-| **User Service** | 3001 | User registration, authentication, and profiles |
-| **Product Service** | 3002 | Product listings, categories, and inventory |
-| **Cart Service** | 3003 | Shopping cart management |
-| **Order Service** | 3004 | Order processing and tracking |
-| **Payment Service** | 3005 | Payment processing via Stripe |
-| **Notification Service** | 3006 | Email and SMS notifications |
+| Service | Port | Database | Description |
+|---------|------|----------|-------------|
+| **API Gateway** | 8000 | - | Central entry point for all API requests |
+| **User Service** | 3001 | PostgreSQL | User registration, authentication, and profiles |
+| **Product Service** | 3002 | PostgreSQL | Product listings, categories, and inventory |
+| **Cart Service** | 3003 | Redis | Shopping cart management (fast in-memory) |
+| **Order Service** | 3004 | PostgreSQL | Order processing and tracking |
+| **Payment Service** | 3005 | - | Payment processing via Stripe |
+| **Notification Service** | 3006 | - | Email and SMS notifications |
 
 ## Prerequisites
 
 - Node.js 18+
 - Docker and Docker Compose
 - PostgreSQL 15+ (or use Docker Compose)
+- Redis 7+ (or use Docker Compose)
 - **Optional:** Stripe account (mock mode available)
 - **Optional:** SendGrid account (mock mode available)
 - **Optional:** Twilio account (mock mode available)
@@ -34,8 +35,8 @@ The platform consists of 7 services:
 cp env.example .env
 # Edit .env with your configuration
 
-# 2. Start all services
-docker-compose up -d
+# 2. Start all services (use --build to rebuild images)
+docker-compose up -d --build
 
 # 3. Verify services are running
 docker-compose ps
@@ -52,7 +53,7 @@ All services will be available at `http://localhost:8000` via the API Gateway.
 ./setup.sh           # Linux/Mac
 
 # 2. Start databases with Docker
-docker-compose up -d postgres-users postgres-products postgres-cart postgres-orders
+docker-compose up -d postgres-users postgres-products postgres-orders redis
 
 # 3. Start services locally
 npm start
@@ -250,7 +251,10 @@ curl -X POST http://localhost:8000/api/payments/payments/intent \
 ## Docker Commands
 
 ```bash
-# Start all services
+# Start all services (with rebuild)
+docker-compose up -d --build
+
+# Start without rebuild (faster, uses cached images)
 docker-compose up -d
 
 # View status
@@ -258,7 +262,7 @@ docker-compose ps
 
 # View logs
 docker-compose logs -f
-docker-compose logs -f user-service
+docker-compose logs -f cart-service
 
 # Restart services
 docker-compose restart
@@ -282,6 +286,9 @@ POSTGRES_PASSWORD=postgres
 # JWT
 JWT_SECRET=your-super-secret-jwt-key
 JWT_EXPIRES_IN=7d
+
+# Redis (for Cart Service)
+REDIS_URL=redis://localhost:6379
 
 # Stripe (optional - mock mode if not set)
 STRIPE_SECRET_KEY=sk_test_...
@@ -329,4 +336,4 @@ Ecommerce/
 
 ## License
 
-ISC
+MIT

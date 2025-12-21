@@ -13,9 +13,6 @@
   ],
   "author": "",
   "license": "ISC",
-  "devDependencies": {
-    "axios": "^1.6.2"
-  },
   "dependencies": {
     "dotenv": "^17.2.3",
     "pg": "^8.16.3"

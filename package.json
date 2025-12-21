@@ -1,0 +1,23 @@
+{
+  "name": "ecommerce-platform",
+  "version": "1.0.0",
+  "description": "Scalable E-Commerce Platform with Microservices",
+  "scripts": {
+    "start": "node start-services.js",
+    "test:integration": "node test-integration.js"
+  },
+  "keywords": [
+    "microservices",
+    "ecommerce",
+    "docker"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "axios": "^1.6.2"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "pg": "^8.16.3"
+  }
+}

@@ -12,6 +12,7 @@ describe('User Service - Unit Tests', () => {
 
     describe('Email Validation', () => {
         const isValidEmail = (email) => {
+            if (!email) return false;
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             return emailRegex.test(email);
         };
@@ -27,7 +28,8 @@ describe('User Service - Unit Tests', () => {
 
     describe('Password Validation', () => {
         const isValidPassword = (password) => {
-            return password && password.length >= 6;
+            if (!password) return false;
+            return password.length >= 6;
         };
 
         it('should accept passwords 6+ characters', () => {
@@ -38,6 +40,7 @@ describe('User Service - Unit Tests', () => {
         it('should reject short passwords', () => {
             expect(isValidPassword('12345')).toBe(false);
             expect(isValidPassword('')).toBe(false);
+            expect(isValidPassword(null)).toBe(false);
         });
     });
 });

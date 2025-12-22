@@ -14,6 +14,7 @@ describe('Order Service - Unit Tests', () => {
         const validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
 
         const isValidStatus = (status) => {
+            if (!status) return false;
             return validStatuses.includes(status);
         };
 
@@ -26,12 +27,14 @@ describe('Order Service - Unit Tests', () => {
         it('should reject invalid order statuses', () => {
             expect(isValidStatus('unknown')).toBe(false);
             expect(isValidStatus('')).toBe(false);
+            expect(isValidStatus(null)).toBe(false);
         });
     });
 
     describe('Shipping Address Validation', () => {
         const isValidAddress = (address) => {
-            return address && address.trim().length >= 10;
+            if (!address) return false;
+            return address.trim().length >= 10;
         };
 
         it('should accept valid addresses', () => {
@@ -41,6 +44,7 @@ describe('Order Service - Unit Tests', () => {
         it('should reject invalid addresses', () => {
             expect(isValidAddress('')).toBe(false);
             expect(isValidAddress('short')).toBe(false);
+            expect(isValidAddress(null)).toBe(false);
         });
     });
 });

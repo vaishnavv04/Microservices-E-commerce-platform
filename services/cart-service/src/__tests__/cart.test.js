@@ -12,8 +12,8 @@ describe('Cart Service - Unit Tests', () => {
 
     describe('Cart Item Validation', () => {
         const isValidCartItem = (item) => {
-            return item &&
-                typeof item.productId === 'number' &&
+            if (!item) return false;
+            return typeof item.productId === 'number' &&
                 typeof item.quantity === 'number' &&
                 item.quantity > 0;
         };
@@ -27,11 +27,13 @@ describe('Cart Service - Unit Tests', () => {
             expect(isValidCartItem({ productId: 1, quantity: 0 })).toBe(false);
             expect(isValidCartItem({ productId: 1, quantity: -1 })).toBe(false);
             expect(isValidCartItem(null)).toBe(false);
+            expect(isValidCartItem(undefined)).toBe(false);
         });
     });
 
     describe('Cart Total Calculation', () => {
         const calculateTotal = (items) => {
+            if (!items || !items.length) return 0;
             return items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
         };
 
@@ -45,6 +47,7 @@ describe('Cart Service - Unit Tests', () => {
 
         it('should return 0 for empty cart', () => {
             expect(calculateTotal([])).toBe(0);
+            expect(calculateTotal(null)).toBe(0);
         });
     });
 });

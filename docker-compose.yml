@@ -100,6 +100,7 @@ services:
       DB_NAME: ecommerce_users
       DB_USER: ${POSTGRES_USER:-postgres}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      DATABASE_URL_USERS: ${DATABASE_URL_USERS}
     ports:
       - "3001:3001"
     depends_on:
@@ -125,6 +126,7 @@ services:
       DB_NAME: ecommerce_products
       DB_USER: ${POSTGRES_USER:-postgres}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      DATABASE_URL_PRODUCTS: ${DATABASE_URL_PRODUCTS}
     ports:
       - "3002:3002"
     depends_on:

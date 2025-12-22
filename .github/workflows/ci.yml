@@ -77,6 +77,6 @@ jobs:
       - name: Build Docker images (test only)
         run: |
           echo "Building Docker images..."
-          docker-compose build --parallel
+          docker compose build --parallel
         env:
           DOCKER_BUILDKIT: 1

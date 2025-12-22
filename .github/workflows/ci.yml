@@ -10,33 +10,9 @@ jobs:
   test:
     name: Test Services
     runs-on: ubuntu-latest
-    
-    services:
-      postgres:
-        image: postgres:15-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test_db
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-      
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
     strategy:
+      fail-fast: false
       matrix:
         service:
           - user-service
@@ -54,25 +30,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: services/${{ matrix.service }}/package-lock.json
 
       - name: Install dependencies
         working-directory: services/${{ matrix.service }}
-        run: npm ci
+        run: npm install
 
       - name: Run tests
         working-directory: services/${{ matrix.service }}
-        run: npm test --if-present
+        run: npm test
         env:
           NODE_ENV: test
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-          REDIS_URL: redis://localhost:6379
-          JWT_SECRET: test-secret-key
-          STRIPE_SECRET_KEY: sk_test_mock
-          SENDGRID_API_KEY: mock_key
-          TWILIO_ACCOUNT_SID: mock_sid
-          TWILIO_AUTH_TOKEN: mock_token
 
   lint:
     name: Lint Check

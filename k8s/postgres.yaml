@@ -1,0 +1,199 @@
+# PostgreSQL Databases for User, Product, and Order services
+---
+# PostgreSQL for Users
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-users
+  namespace: ecommerce
+spec:
+  serviceName: postgres-users
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-users
+  template:
+    metadata:
+      labels:
+        app: postgres-users
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: ecommerce_users
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: ecommerce-secrets
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ecommerce-secrets
+                  key: POSTGRES_PASSWORD
+          volumeMounts:
+            - name: postgres-users-data
+              mountPath: /var/lib/postgresql/data
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-users-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-users
+  namespace: ecommerce
+spec:
+  ports:
+    - port: 5432
+  selector:
+    app: postgres-users
+  clusterIP: None
+---
+# PostgreSQL for Products
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-products
+  namespace: ecommerce
+spec:
+  serviceName: postgres-products
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-products
+  template:
+    metadata:
+      labels:
+        app: postgres-products
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: ecommerce_products
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: ecommerce-secrets
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ecommerce-secrets
+                  key: POSTGRES_PASSWORD
+          volumeMounts:
+            - name: postgres-products-data
+              mountPath: /var/lib/postgresql/data
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-products-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-products
+  namespace: ecommerce
+spec:
+  ports:
+    - port: 5432
+  selector:
+    app: postgres-products
+  clusterIP: None
+---
+# PostgreSQL for Orders
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-orders
+  namespace: ecommerce
+spec:
+  serviceName: postgres-orders
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-orders
+  template:
+    metadata:
+      labels:
+        app: postgres-orders
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: ecommerce_orders
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: ecommerce-secrets
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ecommerce-secrets
+                  key: POSTGRES_PASSWORD
+          volumeMounts:
+            - name: postgres-orders-data
+              mountPath: /var/lib/postgresql/data
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-orders-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-orders
+  namespace: ecommerce
+spec:
+  ports:
+    - port: 5432
+  selector:
+    app: postgres-orders
+  clusterIP: None

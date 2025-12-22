@@ -1,0 +1,8 @@
+# Namespace for the e-commerce platform
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ecommerce
+  labels:
+    app.kubernetes.io/name: ecommerce-platform
+    app.kubernetes.io/version: "1.0"

@@ -1,0 +1,26 @@
+# ConfigMap for non-sensitive configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ecommerce-config
+  namespace: ecommerce
+data:
+  NODE_ENV: "production"
+  JWT_EXPIRES_IN: "7d"
+  
+  # Database hosts (service names in K8s)
+  POSTGRES_USERS_HOST: "postgres-users"
+  POSTGRES_PRODUCTS_HOST: "postgres-products"
+  POSTGRES_ORDERS_HOST: "postgres-orders"
+  POSTGRES_PORT: "5432"
+  
+  # Redis
+  REDIS_URL: "redis://redis:6379"
+  
+  # Inter-service communication
+  USER_SERVICE_URL: "http://user-service:3001"
+  PRODUCT_SERVICE_URL: "http://product-service:3002"
+  CART_SERVICE_URL: "http://cart-service:3003"
+  ORDER_SERVICE_URL: "http://order-service:3004"
+  PAYMENT_SERVICE_URL: "http://payment-service:3005"
+  NOTIFICATION_SERVICE_URL: "http://notification-service:3006"

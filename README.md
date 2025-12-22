@@ -1,5 +1,8 @@
 # E-Commerce Microservices Platform
 
+[![CI](https://github.com/vaishnavv04/Microservices-E-commerce-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/vaishnavv04/Microservices-E-commerce-platform/actions/workflows/ci.yml)
+[![Docker Build](https://github.com/vaishnavv04/Microservices-E-commerce-platform/actions/workflows/docker-build.yml/badge.svg)](https://github.com/vaishnavv04/Microservices-E-commerce-platform/actions/workflows/docker-build.yml)
+
 A scalable e-commerce platform built with microservices architecture using Node.js, Express, PostgreSQL, Redis, Traefik, and Docker.
 
 ## 🏗️ Architecture

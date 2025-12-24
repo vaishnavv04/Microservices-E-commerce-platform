@@ -2,44 +2,101 @@ import React, { useContext } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { CartContext } from '../context/CartContext';
+import ThemeToggle from './ThemeToggle';
 
+/**
+ * Header Component - Main navigation bar
+ * 
+ * TODO: Customize this component:
+ * - Replace "ShopMicro" text with your brand logo/image
+ * - Add dropdown menus for categories
+ * - Add search bar in header
+ * - Add user profile dropdown when logged in
+ */
 const Header = () => {
   const { user, logout } = useContext(AuthContext);
   const { cart } = useContext(CartContext);
   const location = useLocation();
 
   // Helper to check active route
-  const isActive = (path) => location.pathname === path ? 'active' : '';
+  const isActive = (path) => location.pathname === path;
 
   return (
-    <header className="animate-fade-in">
+    <header className="animate-fade-in bg-white/80 dark:bg-slate-800/85 backdrop-blur-xl px-[5%] py-4 flex justify-between items-center sticky top-0 z-50 border-b border-white/30 dark:border-slate-700/50 shadow-sm transition-colors duration-300">
       <div className="logo-container">
-        <h1>
-          <Link to="/" style={{ color: 'inherit', textDecoration: 'none' }}>
+        {/* 
+          TODO: Replace this with your brand logo
+          Example: <img src="/logo.png" alt="Your Store Name" height="40" />
+        */}
+        <h1 className="text-2xl font-extrabold bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
+          <Link to="/" className="text-inherit no-underline">
             ShopMicro
           </Link>
         </h1>
       </div>
 
-      <nav>
-        <Link to="/" className={isActive('/')}>Home</Link>
-        <Link to="/products" className={isActive('/products')}>Products</Link>
+      <nav className="flex gap-8 items-center">
+        <Link 
+          to="/" 
+          className={`font-medium relative transition-colors duration-200 hover:text-primary ${isActive('/') ? 'text-primary font-bold' : 'text-slate-500 dark:text-slate-400'}`}
+        >
+          Home
+        </Link>
+        <Link 
+          to="/products" 
+          className={`font-medium relative transition-colors duration-200 hover:text-primary ${isActive('/products') ? 'text-primary font-bold' : 'text-slate-500 dark:text-slate-400'}`}
+        >
+          Products
+        </Link>
+        
+        {/* TODO: Add more navigation links here, e.g., Categories, Deals, About */}
         
         {user ? (
           <>
-            <Link to="/cart" className={`cart-link ${isActive('/cart')}`}>
+            <Link 
+              to="/cart" 
+              className={`flex items-center gap-2 font-medium transition-colors duration-200 hover:text-primary ${isActive('/cart') ? 'text-primary font-bold' : 'text-slate-500 dark:text-slate-400'}`}
+            >
               Cart 
-              {cart.length > 0 && <span className="cart-badge">{cart.length}</span>}
+              {cart.length > 0 && (
+                <span className="bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-5 text-center">
+                  {cart.length}
+                </span>
+              )}
             </Link>
-            <Link to="/orders" className={isActive('/orders')}>Orders</Link>
-            <button onClick={logout} className="btn-logout">Logout</button>
+            <Link 
+              to="/orders" 
+              className={`font-medium transition-colors duration-200 hover:text-primary ${isActive('/orders') ? 'text-primary font-bold' : 'text-slate-500 dark:text-slate-400'}`}
+            >
+              Orders
+            </Link>
+            {/* TODO: Add user profile dropdown here */}
+            <button 
+              onClick={logout} 
+              className="bg-transparent border border-slate-300 dark:border-slate-600 px-5 py-2 rounded-lg text-slate-700 dark:text-slate-300 font-semibold cursor-pointer transition-all duration-200 flex items-center justify-center hover:bg-red-100 hover:text-red-500 hover:border-red-500"
+            >
+              Logout
+            </button>
           </>
         ) : (
-          <div className="auth-buttons">
-            <Link to="/login" className={`btn-text ${isActive('/login')}`}>Login</Link>
-            <Link to="/register" className="btn btn-primary" style={{ padding: '0.5rem 1rem', color: 'white' }}>Register</Link>
+          <div className="flex gap-4 items-center">
+            <Link 
+              to="/login" 
+              className={`font-medium transition-colors duration-200 hover:text-primary ${isActive('/login') ? 'text-primary font-bold' : 'text-slate-500 dark:text-slate-400'}`}
+            >
+              Login
+            </Link>
+            <Link 
+              to="/register" 
+              className="px-5 py-2 rounded-lg font-semibold text-white bg-gradient-to-br from-primary to-purple-500 hover:from-primary-hover hover:to-purple-600 shadow-lg transition-all duration-300 hover:-translate-y-0.5"
+            >
+              Register
+            </Link>
           </div>
         )}
+        
+        {/* Theme Toggle */}
+        <ThemeToggle />
       </nav>
     </header>
   );

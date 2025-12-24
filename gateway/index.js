@@ -3,15 +3,18 @@ const express = require('express');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const cors = require('cors');
 const helmet = require('helmet');
-const morgan = require('morgan');
+const { createLogger, requestLoggerMiddleware } = require('../shared/logger');
 
 const app = express();
 const PORT = process.env.GATEWAY_PORT || 8000;
 
+// Initialize structured logger
+const logger = createLogger('api-gateway');
+
 // Middleware
 app.use(cors()); // Enable CORS for all routes
 app.use(helmet()); // Security headers
-app.use(morgan('dev')); // Logging
+app.use(requestLoggerMiddleware(logger)); // Structured request logging
 
 // Health check
 app.get('/health', (req, res) => {
@@ -60,7 +63,12 @@ services.forEach(({ route, target }) => {
             // proxyReq.setHeader('X-Gateway-Auth', 'some-token');
         },
         onError: (err, req, res) => {
-            console.error(`Proxy Error (${route}):`, err.message);
+            logger.error(`Proxy Error (${route})`, { 
+                route, 
+                target, 
+                error: err.message,
+                url: req.originalUrl
+            });
             res.status(502).json({
                 error: 'Bad Gateway',
                 message: `Service at ${route} is unavailable`
@@ -73,8 +81,9 @@ services.forEach(({ route, target }) => {
 
 // Start Gateway
 app.listen(PORT, () => {
-    console.log(`🚀 API Gateway running on port ${PORT}`);
-    console.log(`📍 Gateway URL: http://localhost:${PORT}`);
-    console.log('🔗 Configured Routes:');
-    services.forEach(s => console.log(`   ${s.route} -> ${s.target}`));
+    logger.info(`API Gateway running on port ${PORT}`, { port: PORT });
+    logger.info('Gateway URL', { url: `http://localhost:${PORT}` });
+    logger.info('Configured Routes', { 
+        routes: services.map(s => ({ route: s.route, target: s.target }))
+    });
 });

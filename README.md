@@ -328,10 +328,100 @@ Ecommerce/
 │   ├── order-service/      # Order processing
 │   ├── payment-service/    # Payment processing
 │   └── notification-service/ # Notifications
+├── shared/
+│   └── logger/             # Shared Winston logger
+├── elk/                     # ELK Stack configuration
+│   ├── elasticsearch.yml   # Elasticsearch config
+│   ├── logstash.yml        # Logstash config
+│   └── logstash.conf       # Logstash pipeline
 ├── docker-compose.yml      # Docker orchestration
+├── docker-compose.elk.yml  # ELK Stack orchestration
 ├── start-services.js       # Local startup script
 ├── .env                    # Environment variables
 └── README.md
+```
+
+## Centralized Logging (ELK Stack)
+
+The platform includes centralized logging using the **ELK Stack** (Elasticsearch, Logstash, Kibana) for aggregating logs from all microservices.
+
+### Architecture
+
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│  Microservices  │────▶│    Logstash     │────▶│  Elasticsearch  │
+│  (Winston logs) │     │   (TCP :5044)   │     │    (:9200)      │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+                                                        │
+                                                        ▼
+                                                ┌───────────────┐
+                                                │    Kibana     │
+                                                │   (:5601)     │
+                                                └───────────────┘
+```
+
+### Starting the ELK Stack
+
+```bash
+# 1. Start ELK stack
+docker-compose -f docker-compose.elk.yml up -d
+
+# 2. Wait for Elasticsearch to be ready (takes ~1 minute)
+curl http://localhost:9200/_cluster/health
+
+# 3. Start your microservices
+docker-compose up -d
+
+# 4. Access Kibana at http://localhost:5601
+```
+
+### Accessing Logs in Kibana
+
+1. Open **Kibana** at `http://localhost:5601`
+2. Go to **Stack Management** → **Index Patterns**
+3. Create an index pattern: `ecommerce-logs-*`
+4. Select `@timestamp` as the time field
+5. Go to **Discover** to view and search logs
+
+### Log Format
+
+Each log entry includes:
+
+| Field | Description |
+|-------|-------------|
+| `service` | Name of the microservice (e.g., `user-service`) |
+| `level` | Log level (`info`, `warn`, `error`, `debug`) |
+| `message` | Log message |
+| `timestamp` | ISO 8601 timestamp |
+| `hostname` | Container/host name |
+| `pid` | Process ID |
+| `method` | HTTP method (for request logs) |
+| `url` | Request URL (for request logs) |
+| `statusCode` | HTTP status code (for request logs) |
+| `duration` | Request duration in ms (for request logs) |
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `LOGSTASH_HOST` | `logstash` | Logstash hostname |
+| `LOGSTASH_PORT` | `5044` | Logstash TCP port |
+| `LOG_LEVEL` | `info` | Minimum log level |
+
+### Example Log Queries in Kibana
+
+```
+# Find all errors
+level: error
+
+# Find logs from user-service
+service: user-service
+
+# Find failed requests
+statusCode >= 400
+
+# Find slow requests (>1 second)
+duration: >1000ms
 ```
 
 ## License

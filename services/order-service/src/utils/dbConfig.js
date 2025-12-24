@@ -12,17 +12,19 @@ const getDbConfig = () => {
   const databaseUrl = process.env.DATABASE_URL_ORDERS || process.env.DATABASE_URL;
   
   if (databaseUrl) {
-    // Ensure SSL is enabled for Supabase connections if not already specified
-    let finalUrl = databaseUrl;
-    if (databaseUrl.includes('supabase.co') && !databaseUrl.includes('sslmode')) {
-      // Add sslmode=require if it's a Supabase URL and SSL mode isn't specified
-      finalUrl = databaseUrl.includes('?') 
-        ? `${databaseUrl}&sslmode=require`
-        : `${databaseUrl}?sslmode=require`;
+    // For Supabase, we need specific SSL settings to avoid certificate errors
+    // with connection poolers. explicit ssl config overrides param but params might conflict
+    if (databaseUrl.includes('supabase.co') || databaseUrl.includes('supabase.com')) {
+      // Strip sslmode from URL if present to let the ssl object control configuration
+      const cleanUrl = databaseUrl.replace(/(\?|&)sslmode=[^&]*/, '');
+      return {
+        connectionString: cleanUrl,
+        ssl: { rejectUnauthorized: false }
+      };
     }
-    
+
     return {
-      connectionString: finalUrl,
+      connectionString: databaseUrl,
     };
   }
 
@@ -33,6 +35,7 @@ const getDbConfig = () => {
     database: process.env.DB_NAME || 'ecommerce_orders',
     user: process.env.DB_USER || 'postgres',
     password: process.env.DB_PASSWORD || 'postgres',
+    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
   };
 };
 

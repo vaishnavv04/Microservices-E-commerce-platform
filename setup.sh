@@ -10,13 +10,18 @@ echo "📦 Installing root dependencies..."
 npm install
 
 # Install service dependencies
-services=("user-service" "product-service" "cart-service" "order-service" "payment-service" "notification-service")
+services=("gateway" "services/user-service" "services/product-service" "services/cart-service" "services/order-service" "services/payment-service" "services/notification-service" "ecommerce-frontend")
 
 for service in "${services[@]}"; do
     echo "📦 Installing dependencies for $service..."
-    cd "services/$service"
+    cd "$service"
     npm install
-    cd ../..
+    # Figure out how many levels to go back
+    if [[ "$service" == services/* ]]; then
+        cd ../..
+    else
+        cd ..
+    fi
     echo "✅ $service dependencies installed"
 done
 
@@ -28,3 +33,4 @@ echo "1. Create .env file: cp env.example .env"
 echo "2. Edit .env and set your DATABASE_URL and JWT_SECRET"
 echo "3. Start services: npm start"
 
+exit

@@ -13,8 +13,9 @@ const Orders = () => {
       if (!user) return;
       try {
         const res = await getUserOrders(user.id);
-        // Sort orders by ID desc (newest first) - assuming ID increments
-        const sortedOrders = (res.data || []).sort((a, b) => b.id - a.id);
+        const orderData = res.data.orders || [];
+        // Sort orders by ID desc (newest first)
+        const sortedOrders = orderData.sort((a, b) => b.id - a.id);
         setOrders(sortedOrders);
       } catch (err) {
         console.error("Failed to fetch orders", err);
@@ -108,9 +109,9 @@ const Orders = () => {
                 <div className="space-y-1">
                   <p className="text-slate-600 dark:text-slate-400">
                     <strong className="text-slate-800 dark:text-slate-200">Total Amount:</strong>{' '}
-                    <span className="font-semibold">${(Math.random() * 100 + 20).toFixed(2)}</span>
+                    <span className="font-semibold">${order.total_amount.toFixed(2)}</span>
                   </p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">4 Items</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">{order.items ? order.items.length : 0} Items</p>
                 </div>
                 
                 <div className="flex gap-4 w-full sm:w-auto">

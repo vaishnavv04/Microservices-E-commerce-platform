@@ -19,7 +19,7 @@ const ProductDetail = () => {
     const fetchProduct = async () => {
       try {
         const res = await getProductById(id);
-        setProduct(res.data);
+        setProduct(res.data.product);
       } catch (err) {
         console.error("Error fetching product", err);
       } finally {
@@ -91,7 +91,7 @@ const ProductDetail = () => {
         <div className="flex flex-col">
           <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-2">{product.name}</h1>
           <p className="text-sm text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-6">
-            SKU: {product.id.substring(0, 8)}
+            SKU: {String(product.id).substring(0, 8)}
           </p>
           
           <div className="text-3xl font-extrabold text-primary mb-6">
@@ -134,7 +134,7 @@ const ProductDetail = () => {
           </div>
           
           <div className="border-t border-slate-200 dark:border-slate-700 pt-6 text-sm text-slate-500 dark:text-slate-400 space-y-2 mt-auto">
-            <p>Category: <strong className="text-slate-700 dark:text-slate-300">{product.category || 'General'}</strong></p>
+            <p>Category: <strong className="text-slate-700 dark:text-slate-300">{product.category_name || 'General'}</strong></p>
             <p>Stock: <span className="text-green-500 font-medium">In Stock</span></p>
           </div>
         </div>

@@ -90,6 +90,9 @@ services:
     container_name: ecommerce-user-service
     env_file:
       - .env
+    volumes:
+      - ./shared:/shared
+      - .env:/.env
     environment:
       PORT: 3001
       NODE_ENV: production
@@ -118,6 +121,9 @@ services:
     container_name: ecommerce-product-service
     env_file:
       - .env
+    volumes:
+      - ./shared:/shared
+      - .env:/.env
     environment:
       PORT: 3002
       NODE_ENV: production
@@ -144,6 +150,9 @@ services:
     container_name: ecommerce-cart-service
     env_file:
       - .env
+    volumes:
+      - ./shared:/shared
+      - .env:/.env
     environment:
       PORT: 3003
       NODE_ENV: production
@@ -171,6 +180,9 @@ services:
     container_name: ecommerce-order-service
     env_file:
       - .env
+    volumes:
+      - ./shared:/shared
+      - .env:/.env
     environment:
       PORT: 3004
       NODE_ENV: production
@@ -203,6 +215,9 @@ services:
     container_name: ecommerce-payment-service
     env_file:
       - .env
+    volumes:
+      - ./shared:/shared
+      - .env:/.env
     environment:
       PORT: 3005
       NODE_ENV: production
@@ -222,6 +237,9 @@ services:
     container_name: ecommerce-notification-service
     env_file:
       - .env
+    volumes:
+      - ./shared:/shared
+      - .env:/.env
     environment:
       PORT: 3006
       NODE_ENV: production
@@ -244,6 +262,9 @@ services:
     container_name: ecommerce-gateway
     env_file:
       - .env
+    volumes:
+      - ./shared:/shared
+      - .env:/.env
     environment:
       PORT: 8000
       NODE_ENV: production
@@ -262,6 +283,20 @@ services:
       - order-service
       - payment-service
       - notification-service
+    networks:
+      - ecommerce-network
+    restart: unless-stopped
+
+  # Frontend
+  frontend:
+    build:
+      context: ./ecommerce-frontend
+      dockerfile: Dockerfile
+    container_name: ecommerce-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - gateway
     networks:
       - ecommerce-network
     restart: unless-stopped

@@ -14,11 +14,15 @@ const Products = () => {
       try {
         const [prodRes, catRes] = await Promise.all([
           getProducts(),
-          getCategories().catch(() => ({ data: [] })) // Handle if endpoint fails
+          getCategories().catch(() => ({ data: { categories: [] } })) // Handle if endpoint fails
         ]);
-        setProducts(prodRes.data);
-        // Extract unique categories if API returns strings, or use directly if objects
-        setCategories(['All', ...catRes.data]); 
+        setProducts(prodRes.data.products || []);
+        
+        // Extract names from category objects
+        const categoryNames = Array.isArray(catRes.data.categories) 
+          ? catRes.data.categories.map(c => c.name) 
+          : [];
+        setCategories(['All', ...categoryNames]); 
       } catch (err) {
         console.error("Failed to load data", err);
       } finally {
@@ -29,9 +33,9 @@ const Products = () => {
   }, []);
 
   // Filter Logic
-  const filteredProducts = products.filter(product => {
-    const matchesCategory = activeCategory === 'All' || product.category === activeCategory;
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredProducts = (Array.isArray(products) ? products : []).filter(product => {
+    const matchesCategory = activeCategory === 'All' || product.category_name === activeCategory;
+    const matchesSearch = product.name?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 

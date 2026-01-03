@@ -2,7 +2,7 @@
 
 ## Testing Without API Keys
 
-You can develop and test the platform **without** Stripe, SendGrid, or Twilio API keys! The services will automatically use mock/development mode.
+You can develop and test the platform **without** Razorpay, SendGrid, or Twilio API keys! The services will automatically use mock/development mode.
 
 ### What Works Without API Keys:
 
@@ -42,7 +42,8 @@ You can develop and test the platform **without** Stripe, SendGrid, or Twilio AP
 
 4. **Leave API keys as placeholders** - they'll work in mock mode:
    ```env
-   STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
+   RAZORPAY_KEY_ID=rzp_test_your_key_id
+   RAZORPAY_KEY_SECRET=your_razorpay_secret
    SENDGRID_API_KEY=your_sendgrid_api_key
    TWILIO_ACCOUNT_SID=your_twilio_account_sid
    ```
@@ -88,9 +89,9 @@ You can develop and test the platform **without** Stripe, SendGrid, or Twilio AP
 
 ### When You're Ready for Real API Keys:
 
-1. **Stripe** (for real payments):
-   - Sign up at https://stripe.com
-   - Get test keys from Dashboard > Developers > API keys
+1. **Razorpay** (for real payments):
+   - Sign up at https://razorpay.com
+   - Get test keys from Dashboard > Settings > API Keys
    - Update `.env` with real keys
 
 2. **SendGrid** (for real emails):
@@ -106,7 +107,7 @@ You can develop and test the platform **without** Stripe, SendGrid, or Twilio AP
 ### Mock Mode Indicators:
 
 When services are in mock mode, you'll see warnings in the console:
-- `⚠️  Stripe not configured - using mock payment intent`
+- `⚠️  Razorpay not configured - using mock order`
 - `⚠️  SendGrid not configured - logging email instead`
 - `⚠️  Twilio not configured - logging SMS instead`
 

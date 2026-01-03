@@ -2,13 +2,14 @@ import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { CartContext } from '../context/CartContext';
 import CartItem from '../components/CartItem';
+import { formatINR } from '../utils/currency';
 
 const Cart = () => {
   const { cart, removeItem, updateItem } = useContext(CartContext);
 
   // Calculations
   const subtotal = cart.reduce((sum, item) => sum + (Number(item.product.price) * item.quantity), 0);
-  const tax = subtotal * 0.08; // Assuming 8% tax
+  const tax = subtotal * 0.08; // Assuming 8% tax (GST)
   const total = subtotal + tax;
 
   if (cart.length === 0) {
@@ -19,7 +20,7 @@ const Cart = () => {
         <p className="text-slate-500 dark:text-slate-400 mb-8">Looks like you haven't added anything yet.</p>
         <Link 
           to="/products" 
-          className="inline-block px-8 py-4 rounded-lg font-semibold text-white bg-gradient-to-br from-primary to-purple-500 hover:from-primary-hover hover:to-purple-600 shadow-lg transition-all duration-300 hover:-translate-y-0.5"
+          className="btn-primary btn-lg inline-block"
         >
           Start Shopping
         </Link>
@@ -56,28 +57,28 @@ const Cart = () => {
         </div>
 
         {/* Right Column: Order Summary */}
-        <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-md sticky top-24">
+        <div className="card shadow-md sticky top-24">
           <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-6 pb-4 border-b border-slate-200 dark:border-slate-700">
             Order Summary
           </h3>
           
           <div className="flex justify-between mb-3 text-slate-500 dark:text-slate-400">
             <span>Subtotal</span>
-            <span>${subtotal.toFixed(2)}</span>
+            <span>{formatINR(subtotal)}</span>
           </div>
           <div className="flex justify-between mb-4 text-slate-500 dark:text-slate-400">
-            <span>Tax (8%)</span>
-            <span>${tax.toFixed(2)}</span>
+            <span>Tax (GST 8%)</span>
+            <span>{formatINR(tax)}</span>
           </div>
           <div className="border-t border-slate-200 dark:border-slate-700 my-4"></div>
           <div className="flex justify-between text-xl font-bold text-slate-800 dark:text-slate-100">
             <span>Total</span>
-            <span>${total.toFixed(2)}</span>
+            <span>{formatINR(total)}</span>
           </div>
 
           <Link 
             to="/checkout" 
-            className="mt-6 w-full inline-block text-center px-6 py-4 rounded-lg font-semibold text-white bg-gradient-to-br from-primary to-purple-500 hover:from-primary-hover hover:to-purple-600 shadow-lg transition-all duration-300 hover:-translate-y-0.5"
+            className="btn-primary btn-lg btn-block mt-6"
           >
             Proceed to Checkout
           </Link>

@@ -13,7 +13,7 @@ The platform consists of 7 services:
 | **Product Service** | 3002 | PostgreSQL | Product listings, categories, and inventory |
 | **Cart Service** | 3003 | Redis | Shopping cart management (fast in-memory) |
 | **Order Service** | 3004 | PostgreSQL | Order processing and tracking |
-| **Payment Service** | 3005 | - | Payment processing via Stripe |
+| **Payment Service** | 3005 | - | Payment processing via Razorpay |
 | **Notification Service** | 3006 | - | Email and SMS notifications |
 
 ## Prerequisites
@@ -22,7 +22,7 @@ The platform consists of 7 services:
 - Docker and Docker Compose
 - PostgreSQL 15+ (or use Docker Compose)
 - Redis 7+ (or use Docker Compose)
-- **Optional:** Stripe account (mock mode available)
+- **Optional:** Razorpay account (mock mode available)
 - **Optional:** SendGrid account (mock mode available)
 - **Optional:** Twilio account (mock mode available)
 
@@ -167,15 +167,15 @@ GET /health
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/payments/payments/intent` | Create payment intent |
-| POST | `/api/payments/payments/confirm` | Confirm payment |
+| POST | `/api/payments/payments/order` | Create Razorpay order |
+| POST | `/api/payments/payments/verify` | Verify payment signature |
 | POST | `/api/payments/payments/refund` | Process refund |
 
-**Create Payment Intent Request:**
+**Create Payment Order Request:**
 ```json
 {
-  "amount": 99.99,
-  "currency": "usd",
+  "amount": 999.99,
+  "currency": "INR",
   "orderId": 1,
   "userId": 1
 }
@@ -290,9 +290,9 @@ JWT_EXPIRES_IN=7d
 # Redis (for Cart Service)
 REDIS_URL=redis://localhost:6379
 
-# Stripe (optional - mock mode if not set)
-STRIPE_SECRET_KEY=sk_test_...
-STRIPE_PUBLISHABLE_KEY=pk_test_...
+# Razorpay (optional - mock mode if not set)
+RAZORPAY_KEY_ID=rzp_test_...
+RAZORPAY_KEY_SECRET=...
 
 # SendGrid (optional - mock mode if not set)
 SENDGRID_API_KEY=SG...

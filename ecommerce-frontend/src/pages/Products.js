@@ -41,7 +41,7 @@ const Products = () => {
 
   if (loading) return (
     <div className="text-center py-16">
-      <div className="w-12 h-12 border-4 border-primary/10 border-l-primary rounded-full animate-spin mx-auto"></div>
+      <div className="spinner"></div>
       <p className="mt-4 text-slate-500 dark:text-slate-400">Loading Amazing Products...</p>
     </div>
   );
@@ -55,7 +55,7 @@ const Products = () => {
         <div className="flex flex-col gap-6 items-center max-w-xl mx-auto">
           <input 
             type="text" 
-            className="w-full max-w-md px-6 py-4 rounded-full border border-slate-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 shadow-sm transition-all duration-300 text-base focus:outline-none focus:scale-[1.02] focus:shadow-glow focus:border-primary"
+            className="search-bar"
             placeholder="Search products..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -65,11 +65,7 @@ const Products = () => {
             {categories.map((cat, index) => (
               <button
                 key={index}
-                className={`px-5 py-2.5 text-sm rounded-full transition-all duration-200 cursor-pointer font-medium ${
-                  activeCategory === cat 
-                    ? 'bg-gradient-to-r from-primary to-purple-500 text-white border-transparent shadow-lg' 
-                    : 'bg-transparent border border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:border-primary hover:text-primary hover:bg-primary/5'
-                }`}
+                className={`pill-btn ${activeCategory === cat ? 'active' : ''}`}
                 onClick={() => setActiveCategory(cat)}
               >
                 {cat}

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { formatINR } from '../utils/currency';
 
 /**
  * ProductCard Component - Displays a single product in the grid
@@ -13,7 +14,7 @@ import { Link } from 'react-router-dom';
  */
 const ProductCard = ({ product }) => {
   return (
-    <div className="card animate-fade-in border border-white/60 dark:border-slate-700/60 p-5 rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm transition-all duration-500 flex flex-col relative overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-2 hover:border-primary">
+    <div className="card animate-fade-in group">
       {/* =================================================================
           TODO: Add product badges here
           Example:
@@ -33,7 +34,7 @@ const ProductCard = ({ product }) => {
           src={product.image_url || 'https://via.placeholder.com/300?text=No+Image'} 
           alt={product.name} 
           loading="lazy"
-          className="w-full aspect-square object-cover rounded-lg mb-5 transition-transform duration-500 hover:scale-105"
+          className="w-full aspect-square object-cover rounded-lg mb-5 transition-transform duration-500 group-hover:scale-105"
         />
       </div>
       
@@ -46,7 +47,7 @@ const ProductCard = ({ product }) => {
           </div>
       */}
       
-      <h3 className="text-xl font-semibold mb-2 text-slate-800 dark:text-slate-100">
+      <h3 className="text-xl font-semibold mb-2">
         {product.name}
       </h3>
       
@@ -57,11 +58,11 @@ const ProductCard = ({ product }) => {
       
       {/* TODO: Show original price if discounted
           {product.originalPrice && (
-            <span className="original-price">${product.originalPrice.toFixed(2)}</span>
+            <span className="original-price">{formatINR(product.originalPrice)}</span>
           )}
       */}
-      <span className="text-2xl font-extrabold text-slate-800 dark:text-slate-100 my-4">
-        ${Number(product.price).toFixed(2)}
+      <span className="text-2xl font-extrabold my-4">
+        {formatINR(Number(product.price))}
       </span>
       
       {/* =================================================================
@@ -78,7 +79,7 @@ const ProductCard = ({ product }) => {
       
       <Link 
         to={`/products/${product.id}`}
-        className="mt-auto text-center py-3 bg-transparent text-primary border-2 border-primary rounded-lg font-semibold transition-all duration-200 block no-underline hover:bg-primary hover:text-white hover:shadow-lg"
+        className="mt-auto btn-outline btn-block text-center"
       >
         View Details
       </Link>

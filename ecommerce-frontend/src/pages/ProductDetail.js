@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getProductById } from '../services/api';
 import { CartContext } from '../context/CartContext';
 import { AuthContext } from '../context/AuthContext';
+import { formatINR } from '../utils/currency';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -95,7 +96,7 @@ const ProductDetail = () => {
           </p>
           
           <div className="text-3xl font-extrabold text-primary mb-6">
-            ${Number(product.price).toFixed(2)}
+            {formatINR(Number(product.price))}
           </div>
 
           <p className="text-slate-600 dark:text-slate-400 leading-relaxed mb-8">

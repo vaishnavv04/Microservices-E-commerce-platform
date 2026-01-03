@@ -141,6 +141,10 @@
   [data-theme="dark"] .card {
     @apply bg-slate-800/80 border-slate-700/60;
   }
+  .dark .card:hover,
+  [data-theme="dark"] .card:hover {
+    @apply border-primary;
+  }
 
   /* Spinner */
   .spinner {

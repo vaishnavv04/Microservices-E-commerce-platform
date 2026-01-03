@@ -10,7 +10,8 @@ import {
   getCart,
   addToCart,
   updateCartItem,
-  removeCartItem
+  removeCartItem,
+  clearCart as clearCartApi
 } from '../services/api';
 
 export const CartContext = createContext();
@@ -45,13 +46,23 @@ export const CartProvider = ({ children }) => {
     fetchCart();
   };
 
+  const clearCart = async (userId) => {
+    try {
+      await clearCartApi(userId);
+    } catch (err) {
+      // Cart may not exist or already be empty - that's okay
+      console.log('Cart clear response:', err.message);
+    }
+    setCart([]);
+  };
+
   useEffect(() => {
     fetchCart();
   }, [fetchCart]);
 
   return (
     <CartContext.Provider
-      value={{ cart, addItem, updateItem, removeItem, fetchCart }}
+      value={{ cart, addItem, updateItem, removeItem, fetchCart, clearCart }}
     >
       {children}
     </CartContext.Provider>

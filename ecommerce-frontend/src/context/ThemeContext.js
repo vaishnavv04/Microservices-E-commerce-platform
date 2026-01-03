@@ -19,6 +19,11 @@ export const ThemeProvider = ({ children }) => {
   // Apply theme to document root and persist to localStorage
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
     localStorage.setItem('shopmicro-theme', theme);
   }, [theme]);
 

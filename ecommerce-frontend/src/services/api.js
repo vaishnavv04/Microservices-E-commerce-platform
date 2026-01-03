@@ -37,9 +37,9 @@ export const getOrderById = (id) => api.get(`/api/orders/orders/${id}`);
 export const getUserOrders = (userId) => api.get(`/api/orders/orders/user/${userId}`);
 export const updateOrderStatus = (id, data) => api.put(`/api/orders/orders/${id}/status`, data);
 
-// Payments
-export const createPaymentIntent = (data) => api.post('/api/payments/payments/intent', data);
-export const confirmPayment = (data) => api.post('/api/payments/payments/confirm', data);
+// Payments (Razorpay)
+export const createPaymentOrder = (data) => api.post('/api/payments/payments/order', data);
+export const verifyPayment = (data) => api.post('/api/payments/payments/verify', data);
 
 // Notifications (optional, for order confirmations)
 export const sendEmail = (data) => api.post('/api/notifications/notifications/email', data);

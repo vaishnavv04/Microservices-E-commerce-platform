@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { formatINR } from '../utils/currency';
 
 const CartItem = ({ item, onRemove, onUpdate }) => {
   const { product, quantity } = item;
@@ -23,7 +24,7 @@ const CartItem = ({ item, onRemove, onUpdate }) => {
             </Link>
           </h4>
           <p className="text-slate-500 dark:text-slate-400 text-sm">
-            ${Number(product.price).toFixed(2)}
+            {formatINR(Number(product.price))}
           </p>
         </div>
       </div>
@@ -51,7 +52,7 @@ const CartItem = ({ item, onRemove, onUpdate }) => {
       {/* Subtotal & Actions */}
       <div className="text-right font-bold flex flex-col items-end gap-2 md:flex-col max-md:flex-row max-md:items-center max-md:justify-between max-md:w-full max-md:border-t max-md:border-slate-100 max-md:pt-4">
         <p className="text-lg text-slate-800 dark:text-slate-100 m-0">
-          ${(Number(product.price) * quantity).toFixed(2)}
+          {formatINR(Number(product.price) * quantity)}
         </p>
         <button 
           className="bg-transparent text-red-500 text-2xl leading-none px-2 border-none cursor-pointer transition-all duration-200 hover:bg-red-100 dark:hover:bg-red-900/30 rounded" 

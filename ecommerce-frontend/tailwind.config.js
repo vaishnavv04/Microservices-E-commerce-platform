@@ -46,6 +46,7 @@ module.exports = {
         'float': 'float 6s ease-in-out infinite',
         'blob': 'blob 8s infinite alternate',
         'spin-slow': 'spin 1s linear infinite',
+        'dash': 'dash 2s linear infinite',
       },
       keyframes: {
         fadeIn: {
@@ -79,6 +80,10 @@ module.exports = {
             transform: 'scale(1)',
           },
         },
+        dash:{
+          '0%': { strokeDashoffset: '20' },
+          '100%': { strokeDashoffset: '0' },
+        }
       },
       backgroundImage: {
         'primary-gradient': 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',

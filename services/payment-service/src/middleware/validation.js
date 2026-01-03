@@ -1,9 +1,9 @@
 const Joi = require('joi');
 
-const validateCreateIntent = (req, res, next) => {
+const validateCreateOrder = (req, res, next) => {
   const schema = Joi.object({
     amount: Joi.number().positive().required(),
-    currency: Joi.string().length(3).optional().default('usd'),
+    currency: Joi.string().length(3).optional().default('INR'),
     orderId: Joi.number().integer().optional(),
     userId: Joi.number().integer().optional(),
   });
@@ -15,9 +15,11 @@ const validateCreateIntent = (req, res, next) => {
   next();
 };
 
-const validateConfirm = (req, res, next) => {
+const validateVerify = (req, res, next) => {
   const schema = Joi.object({
-    paymentIntentId: Joi.string().required(),
+    orderId: Joi.string().required(),
+    paymentId: Joi.string().optional(), // Optional in mock mode
+    signature: Joi.string().optional(), // Optional in mock mode
   });
 
   const { error } = schema.validate(req.body);
@@ -29,7 +31,7 @@ const validateConfirm = (req, res, next) => {
 
 const validateRefund = (req, res, next) => {
   const schema = Joi.object({
-    paymentIntentId: Joi.string().required(),
+    paymentId: Joi.string().required(),
     amount: Joi.number().positive().optional(),
   });
 
@@ -41,8 +43,7 @@ const validateRefund = (req, res, next) => {
 };
 
 module.exports = {
-  validateCreateIntent,
-  validateConfirm,
+  validateCreateOrder,
+  validateVerify,
   validateRefund,
 };
-

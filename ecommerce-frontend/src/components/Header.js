@@ -28,8 +28,8 @@ const Header = () => {
           TODO: Replace this with your brand logo
           Example: <img src="/logo.png" alt="Your Store Name" height="40" />
         */}
-        <h1 className="text-2xl font-extrabold bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
-          <Link to="/" className="text-inherit no-underline">
+        <h1 className="text-2xl font-extrabold gradient-text">
+          <Link to="/" className=" no-underline gradient-text">
             ShopMicro
           </Link>
         </h1>
@@ -59,7 +59,7 @@ const Header = () => {
             >
               Cart 
               {cart.length > 0 && (
-                <span className="bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-5 text-center">
+                <span className="cart-badge">
                   {cart.length}
                 </span>
               )}
@@ -73,7 +73,7 @@ const Header = () => {
             {/* TODO: Add user profile dropdown here */}
             <button 
               onClick={logout} 
-              className="bg-transparent border border-slate-300 dark:border-slate-600 px-5 py-2 rounded-lg text-slate-700 dark:text-slate-300 font-semibold cursor-pointer transition-all duration-200 flex items-center justify-center hover:bg-red-100 hover:text-red-500 hover:border-red-500"
+              className="bg-transparent border border-slate-300 dark:border-slate-600 px-5 py-2 rounded-lg text-slate-700 dark:text-slate-300 font-semibold cursor-pointer transition-all duration-200 flex items-center justify-center hover:bg-red-100 hover:text-red-500 hover:border-red-500 dark:hover:text-red-500 dark:hover:bg-red-100"
             >
               Logout
             </button>
@@ -88,7 +88,7 @@ const Header = () => {
             </Link>
             <Link 
               to="/register" 
-              className="px-5 py-2 rounded-lg font-semibold text-white bg-gradient-to-br from-primary to-purple-500 hover:from-primary-hover hover:to-purple-600 shadow-lg transition-all duration-300 hover:-translate-y-0.5"
+              className="btn-primary btn-sm"
             >
               Register
             </Link>

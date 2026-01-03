@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # PostgreSQL Databases
   postgres-users:
@@ -310,5 +308,3 @@ volumes:
   postgres_products_data:
   postgres_orders_data:
   redis_data:
-
-

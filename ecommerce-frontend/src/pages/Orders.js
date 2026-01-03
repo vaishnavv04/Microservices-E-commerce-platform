@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { getUserOrders } from '../services/api';
 import { AuthContext } from '../context/AuthContext';
+import { formatINR } from '../utils/currency';
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
@@ -88,7 +89,7 @@ const Orders = () => {
 
       <div className="flex flex-col gap-6 max-w-4xl mx-auto">
         {orders.map((order) => {
-          const date = new Date().toLocaleDateString(); // Mock date if API doesn't return one
+          const date = new Date().toLocaleDateString('en-IN'); // Use Indian date format
 
           return (
             <div 
@@ -109,7 +110,7 @@ const Orders = () => {
                 <div className="space-y-1">
                   <p className="text-slate-600 dark:text-slate-400">
                     <strong className="text-slate-800 dark:text-slate-200">Total Amount:</strong>{' '}
-                    <span className="font-semibold">${order.total_amount.toFixed(2)}</span>
+                    <span className="font-semibold">{formatINR(order.total_amount)}</span>
                   </p>
                   <p className="text-sm text-slate-500 dark:text-slate-400">{order.items ? order.items.length : 0} Items</p>
                 </div>

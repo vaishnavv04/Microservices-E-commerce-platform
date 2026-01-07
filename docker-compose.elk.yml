@@ -1,0 +1,100 @@
+# ELK Stack for Centralized Logging
+# Start with: docker-compose -f docker-compose.elk.yml up -d
+# Access Kibana at: http://localhost:5601
+
+services:
+  # Elasticsearch - Search and Analytics Engine
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: ecommerce-elasticsearch
+    environment:
+      - node.name=elasticsearch
+      - cluster.name=ecommerce-logs
+      - discovery.type=single-node
+      - bootstrap.memory_lock=false
+      # Aggressively optimized for very low-RAM host
+      # Increasing to 1GB for better stability. 512m was still causing connection resets.
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      # Disable security for development (enable for production)
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+      # Disable resource-heavy features
+      - xpack.ml.enabled=false
+      - xpack.graph.enabled=false
+      - xpack.watcher.enabled=false
+    restart: unless-stopped
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      # TODO: Uncomment below for persistent data storage
+      # - elasticsearch_data:/usr/share/elasticsearch/data
+      - ./elk/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+  # Logstash - Log Ingestion and Processing
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.11.0
+    container_name: ecommerce-logstash
+    volumes:
+      - ./elk/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+      - ./elk/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+    ports:
+      - "5044:5044"  # TCP input for logs
+      - "5000:5000"  # UDP input (optional)
+      - "9600:9600"  # Logstash API
+    environment:
+      # WARNING: 128m is critically low for Logstash. Increasing to a safer minimum of 256m.
+      - "LS_JAVA_OPTS=-Xms256m -Xmx256m"
+    networks:
+      - ecommerce-network
+    restart: unless-stopped
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  # Kibana - Visualization Dashboard
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: ecommerce-kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - SERVER_NAME=kibana
+      # Disable security for development
+      - XPACK_SECURITY_ENABLED=false
+    ports:
+      - "5601:5601"
+    networks:
+      - ecommerce-network
+    restart: unless-stopped
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5601/api/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+# This external network is expected to be created by the main docker-compose.yml
+# file from the parent project directory. This allows all services to communicate.
+networks:
+  ecommerce-network:
+    external: true
+    name: microservices-e-commerce-platform_ecommerce-network
+
+# TODO: Uncomment for persistent Elasticsearch data
+# volumes:
+#   elasticsearch_data:

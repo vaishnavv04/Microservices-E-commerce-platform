@@ -1,10 +1,10 @@
 const {
-  createPaymentIntent,
-  confirmPayment,
+  createOrder,
+  verifyPayment,
   createRefund,
-} = require('../utils/stripe');
+} = require('../utils/razorpay');
 
-const createIntent = async (req, res) => {
+const createPaymentOrder = async (req, res) => {
   try {
     const { amount, currency, orderId, userId } = req.body;
 
@@ -13,49 +13,49 @@ const createIntent = async (req, res) => {
     }
 
     const metadata = {};
-    if (orderId) metadata.orderId = orderId;
-    if (userId) metadata.userId = userId;
+    if (orderId) metadata.orderId = String(orderId);
+    if (userId) metadata.userId = String(userId);
 
-    const result = await createPaymentIntent(amount, currency || 'usd', metadata);
+    const result = await createOrder(amount, currency || 'INR', metadata);
 
     res.status(201).json({
-      message: 'Payment intent created',
+      message: 'Payment order created',
       ...result,
     });
   } catch (error) {
-    console.error('Create payment intent error:', error);
+    console.error('Create payment order error:', error);
     res.status(500).json({
-      error: 'Failed to create payment intent',
+      error: 'Failed to create payment order',
       details: error.message,
     });
   }
 };
 
-const confirm = async (req, res) => {
+const verify = async (req, res) => {
   try {
-    const { paymentIntentId } = req.body;
+    const { orderId, paymentId, signature } = req.body;
 
-    if (!paymentIntentId) {
-      return res.status(400).json({ error: 'Payment intent ID is required' });
+    if (!orderId) {
+      return res.status(400).json({ error: 'Order ID is required' });
     }
 
-    const result = await confirmPayment(paymentIntentId);
+    const result = await verifyPayment(orderId, paymentId, signature);
 
     if (result.success) {
       res.json({
-        message: 'Payment confirmed',
+        message: 'Payment verified successfully',
         ...result,
       });
     } else {
       res.status(400).json({
-        message: 'Payment not confirmed',
+        message: 'Payment verification failed',
         ...result,
       });
     }
   } catch (error) {
-    console.error('Confirm payment error:', error);
+    console.error('Verify payment error:', error);
     res.status(500).json({
-      error: 'Failed to confirm payment',
+      error: 'Failed to verify payment',
       details: error.message,
     });
   }
@@ -63,17 +63,17 @@ const confirm = async (req, res) => {
 
 const refund = async (req, res) => {
   try {
-    const { paymentIntentId, amount } = req.body;
+    const { paymentId, amount } = req.body;
 
-    if (!paymentIntentId) {
-      return res.status(400).json({ error: 'Payment intent ID is required' });
+    if (!paymentId) {
+      return res.status(400).json({ error: 'Payment ID is required' });
     }
 
     if (amount && amount <= 0) {
       return res.status(400).json({ error: 'Invalid refund amount' });
     }
 
-    const result = await createRefund(paymentIntentId, amount || null);
+    const result = await createRefund(paymentId, amount || null);
 
     res.json({
       message: 'Refund processed',
@@ -89,8 +89,7 @@ const refund = async (req, res) => {
 };
 
 module.exports = {
-  createIntent,
-  confirm,
+  createPaymentOrder,
+  verify,
   refund,
 };
-

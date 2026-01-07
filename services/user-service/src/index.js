@@ -3,14 +3,19 @@ const express = require('express');
 const cors = require('cors');
 const userRoutes = require('./routes/userRoutes');
 const { initDatabase } = require('./utils/database');
+const { createLogger, requestLoggerMiddleware } = require('../../../shared/logger');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Initialize structured logger
+const logger = createLogger('user-service');
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(requestLoggerMiddleware(logger));
 
 // Health check
 app.get('/health', (req, res) => {
@@ -24,11 +29,11 @@ app.use('/', userRoutes);
 initDatabase()
   .then(() => {
     app.listen(PORT, () => {
-      console.log(`User Service running on port ${PORT}`);
+      logger.info(`User Service running on port ${PORT}`, { port: PORT });
     });
   })
   .catch((error) => {
-    console.error('Failed to initialize database:', error);
+    logger.error('Failed to initialize database', { error: error.message, stack: error.stack });
     process.exit(1);
   });
 

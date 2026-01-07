@@ -28,6 +28,19 @@ A scalable e-commerce platform built with microservices architecture using Node.
               └───────────┘   └───────────┘   └───────────┘ └───────────┘
 ```
 
+The platform consists of 8 components:
+
+| Service | Port | Database | Description |
+|---------|------|----------|-------------|
+| **Frontend** | 3000 | - | React-based web application |
+| **API Gateway** | 8000 | - | Central entry point for all API requests |
+| **User Service** | 3001 | PostgreSQL | User registration, authentication, and profiles |
+| **Product Service** | 3002 | PostgreSQL | Product listings, categories, and inventory |
+| **Cart Service** | 3003 | Redis | Shopping cart management (fast in-memory) |
+| **Order Service** | 3004 | PostgreSQL | Order processing and tracking |
+| **Payment Service** | 3005 | - | Payment processing via Razorpay |
+| **Notification Service** | 3006 | - | Email and SMS notifications |
+
 ## ✅ Features Implemented
 
 | Feature | Status | Technology |
@@ -36,25 +49,80 @@ A scalable e-commerce platform built with microservices architecture using Node.
 | Product Service | ✅ Complete | Node.js, Express, PostgreSQL |
 | Cart Service | ✅ Complete | Node.js, Express, Redis |
 | Order Service | ✅ Complete | Node.js, Express, PostgreSQL |
-| Payment Service | ✅ Complete | Node.js, Express, Stripe (mock mode) |
-| Notification Service | ✅ Complete | Node.js, Express, SendGrid/Twilio (mock mode) |
+| Payment Service | ✅ Complete | Node.js, Express, Razorpay |
+| Notification Service | ✅ Complete | Node.js, Express, SendGrid/Twilio |
 | **API Gateway** | ✅ Complete | **Traefik v3** (auto-discovery, load balancing) |
+| **Frontend** | ✅ Complete | React |
 | Docker Orchestration | ✅ Complete | Docker Compose |
 | Integration Tests | ✅ Complete | 15 test cases covering full workflow |
 | Service Discovery | ✅ Built-in | Traefik + Docker DNS |
+| Centralized Logging | ✅ Complete | ELK Stack (Elasticsearch, Logstash, Kibana) |
+
+## 📋 Prerequisites
+
+- Node.js 18+
+- Docker and Docker Compose
+- PostgreSQL 15+ (or use Supabase/Docker)
+- Redis 7+ (or use Docker)
+- **Optional:** Razorpay account (mock mode available)
+- **Optional:** SendGrid account (mock mode available)
+- **Optional:** Twilio account (mock mode available)
 
 ## 🚀 Quick Start
 
-### Option 1: Docker Compose (Recommended)
+### Option 1: Local Development (Recommended for Development)
+
+**Step 1: Setup Environment**
+```bash
+cp env.example .env
+# Edit .env with your DATABASE_URL and JWT_SECRET
+```
+
+**Step 2: Install Dependencies**
+```powershell
+# Windows PowerShell
+npm install
+Get-ChildItem -Path services -Directory | ForEach-Object { Set-Location $_.FullName; npm install; Set-Location ..\...; }
+cd ecommerce-frontend && npm install && cd ..
+```
 
 ```bash
-# 1. Clone and setup environment
+# Linux/Mac
+npm install
+for dir in services/*/; do cd "$dir" && npm install && cd ../..; done
+cd ecommerce-frontend && npm install && cd ..
+```
+
+**Step 3: Start Redis**
+```bash
+docker run -d --name redis-ecommerce -p 6379:6379 redis:alpine
+```
+
+**Step 4: Start Backend Services**
+```bash
+node start-services.js
+```
+
+**Step 5: Start Frontend** (in a new terminal)
+```bash
+cd ecommerce-frontend
+npm start
+```
+
+**Access the Application:**
+- Frontend: http://localhost:3000
+- API Gateway: http://localhost:8000
+
+### Option 2: Docker Compose (Full Stack)
+
+```bash
+# 1. Setup environment
 cp env.example .env
 
 # 2. Start all services
 docker-compose up -d --build
 
-# 3. Verify services are running
+# 3. Verify services
 docker-compose ps
 
 # 4. Test the API
@@ -65,24 +133,10 @@ curl http://localhost/api/users/health
 
 | Service | URL |
 |---------|-----|
+| **Frontend** | http://localhost:3000 |
 | **API Gateway** | http://localhost (port 80) |
 | **Traefik Dashboard** | http://localhost:8080 |
 | **Direct Service Access** | http://localhost:3001-3006 |
-
-### Option 2: Local Development
-
-```bash
-# 1. Install dependencies
-.\setup.ps1          # Windows PowerShell
-# OR
-./setup.sh           # Linux/Mac
-
-# 2. Start databases with Docker
-docker-compose up -d postgres-users postgres-products postgres-orders redis
-
-# 3. Start services locally
-npm start
-```
 
 ## 📡 API Endpoints
 
@@ -137,8 +191,19 @@ curl http://localhost/api/notifications/health
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/payments/payments/intent` | Create payment intent |
-| POST | `/api/payments/payments/confirm` | Confirm payment |
+| POST | `/api/payments/payments/order` | Create Razorpay order |
+| POST | `/api/payments/payments/verify` | Verify payment signature |
+| POST | `/api/payments/payments/refund` | Process refund |
+
+**Create Payment Order Request:**
+```json
+{
+  "amount": 999.99,
+  "currency": "INR",
+  "orderId": 1,
+  "userId": 1
+}
+```
 
 ### Notification Service (`/api/notifications`)
 
@@ -174,7 +239,8 @@ node test-integration.js
 Ecommerce/
 ├── traefik/                 # Traefik configuration
 │   └── traefik.yml
-├── gateway/                 # Legacy Express gateway (replaced by Traefik)
+├── gateway/                 # API Gateway
+├── ecommerce-frontend/      # React Frontend
 ├── services/
 │   ├── user-service/        # User management & auth
 │   ├── product-service/     # Product catalog
@@ -182,7 +248,14 @@ Ecommerce/
 │   ├── order-service/       # Order processing
 │   ├── payment-service/     # Payment processing
 │   └── notification-service/ # Email & SMS
+├── shared/
+│   └── logger/              # Shared Winston logger
+├── elk/                     # ELK Stack configuration
+│   ├── elasticsearch.yml    # Elasticsearch config
+│   ├── logstash.yml         # Logstash config
+│   └── logstash.conf        # Logstash pipeline
 ├── docker-compose.yml       # Docker orchestration with Traefik
+├── docker-compose.elk.yml   # ELK Stack orchestration
 ├── start-services.js        # Local startup script
 ├── test-integration.js      # Integration test suite
 ├── .env                     # Environment variables
@@ -228,9 +301,9 @@ JWT_EXPIRES_IN=7d
 # Redis
 REDIS_URL=redis://localhost:6379
 
-# Stripe (optional - mock mode if not configured)
-STRIPE_SECRET_KEY=sk_test_...
-STRIPE_PUBLISHABLE_KEY=pk_test_...
+# Razorpay (optional - mock mode if not set)
+RAZORPAY_KEY_ID=rzp_test_...
+RAZORPAY_KEY_SECRET=...
 
 # SendGrid (optional - mock mode if not configured)
 SENDGRID_API_KEY=SG...
@@ -244,13 +317,98 @@ TWILIO_PHONE_NUMBER=+1...
 
 ## 🛠️ Technology Stack
 
+- **Frontend**: React
 - **Backend**: Node.js, Express.js
 - **Databases**: PostgreSQL 15, Redis 7
 - **API Gateway**: Traefik v3 (auto-discovery, load balancing)
 - **Authentication**: JWT
-- **Payments**: Stripe API
+- **Payments**: Razorpay API
 - **Notifications**: SendGrid (email), Twilio (SMS)
+- **Logging**: ELK Stack (Elasticsearch, Logstash, Kibana)
 - **Containerization**: Docker, Docker Compose
+
+## 📊 Centralized Logging (ELK Stack)
+
+The platform includes centralized logging using the **ELK Stack** (Elasticsearch, Logstash, Kibana) for aggregating logs from all microservices.
+
+### Architecture
+
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│  Microservices  │────▶│    Logstash     │────▶│  Elasticsearch  │
+│  (Winston logs) │     │   (TCP :5044)   │     │    (:9200)      │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+                                                        │
+                                                        ▼
+                                                ┌───────────────┐
+                                                │    Kibana     │
+                                                │   (:5601)     │
+                                                └───────────────┘
+```
+
+### Starting the ELK Stack
+
+```bash
+# 1. Start ELK stack
+docker-compose -f docker-compose.elk.yml up -d
+
+# 2. Wait for Elasticsearch to be ready (takes ~1 minute)
+curl http://localhost:9200/_cluster/health
+
+# 3. Start your microservices
+docker-compose up -d
+
+# 4. Access Kibana at http://localhost:5601
+```
+
+### Accessing Logs in Kibana
+
+1. Open **Kibana** at `http://localhost:5601`
+2. Go to **Stack Management** → **Index Patterns**
+3. Create an index pattern: `ecommerce-logs-*`
+4. Select `@timestamp` as the time field
+5. Go to **Discover** to view and search logs
+
+### Log Format
+
+Each log entry includes:
+
+| Field | Description |
+|-------|-------------|
+| `service` | Name of the microservice (e.g., `user-service`) |
+| `level` | Log level (`info`, `warn`, `error`, `debug`) |
+| `message` | Log message |
+| `timestamp` | ISO 8601 timestamp |
+| `hostname` | Container/host name |
+| `pid` | Process ID |
+| `method` | HTTP method (for request logs) |
+| `url` | Request URL (for request logs) |
+| `statusCode` | HTTP status code (for request logs) |
+| `duration` | Request duration in ms (for request logs) |
+
+### Environment Variables for Logging
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `LOGSTASH_HOST` | `logstash` | Logstash hostname |
+| `LOGSTASH_PORT` | `5044` | Logstash TCP port |
+| `LOG_LEVEL` | `info` | Minimum log level |
+
+### Example Log Queries in Kibana
+
+```
+# Find all errors
+level: error
+
+# Find logs from user-service
+service: user-service
+
+# Find failed requests
+statusCode >= 400
+
+# Find slow requests (>1 second)
+duration: >1000ms
+```
 
 ## 📋 Roadmap
 
@@ -259,8 +417,9 @@ TWILIO_PHONE_NUMBER=+1...
 - [x] Redis Caching for Cart
 - [x] Docker Orchestration
 - [x] Integration Tests
-- [ ] Centralized Logging (ELK Stack)
-- [ ] CI/CD Pipeline (GitHub Actions)
+- [x] Centralized Logging (ELK Stack)
+- [x] CI/CD Pipeline (GitHub Actions)
+- [x] Frontend (React)
 - [ ] Kubernetes Deployment
 
 ## 📝 License

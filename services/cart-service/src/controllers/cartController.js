@@ -165,13 +165,7 @@ const clearCart = async (req, res) => {
     const { userId } = req.params;
     const cartKey = getCartKey(userId);
 
-    // Check if cart exists
-    const exists = await redisClient.exists(cartKey);
-    if (!exists) {
-      return res.status(404).json({ error: 'Cart not found' });
-    }
-
-    // Delete entire cart
+    // Delete cart (if exists) - no error if cart doesn't exist
     await redisClient.del(cartKey);
 
     res.json({ message: 'Cart cleared' });

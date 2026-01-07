@@ -1,0 +1,33 @@
+# Elasticsearch Configuration for E-commerce Logging
+# Single-node development setup
+
+cluster.name: "ecommerce-logs"
+network.host: 0.0.0.0
+
+# TODO: Configure Index Lifecycle Management (ILM) for production
+# Uncomment and adjust for automatic index deletion after X days:
+# 
+# xpack.ilm.enabled: true
+# 
+# Then create an ILM policy via Kibana or API:
+# PUT _ilm/policy/ecommerce-logs-policy
+# {
+#   "policy": {
+#     "phases": {
+#       "hot": {
+#         "actions": {
+#           "rollover": {
+#             "max_age": "7d",
+#             "max_size": "5gb"
+#           }
+#         }
+#       },
+#       "delete": {
+#         "min_age": "30d",
+#         "actions": {
+#           "delete": {}
+#         }
+#       }
+#     }
+#   }
+# }

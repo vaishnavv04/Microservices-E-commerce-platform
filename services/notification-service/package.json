@@ -17,7 +17,8 @@
     "joi": "^17.11.0",
     "@sendgrid/mail": "^7.7.0",
     "twilio": "^4.19.0",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "winston": "^3.11.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1",

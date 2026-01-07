@@ -2,14 +2,22 @@ const express = require('express');
 const router = express.Router();
 const paymentController = require('../controllers/paymentController');
 const {
-  validateCreateIntent,
-  validateConfirm,
+  validateCreateOrder,
+  validateVerify,
   validateRefund,
 } = require('../middleware/validation');
 
-router.post('/payments/intent', validateCreateIntent, paymentController.createIntent);
-router.post('/payments/confirm', validateConfirm, paymentController.confirm);
+// Create a payment order (Razorpay order)
+router.post('/payments/order', validateCreateOrder, paymentController.createPaymentOrder);
+
+// Verify payment after Razorpay checkout
+router.post('/payments/verify', validateVerify, paymentController.verify);
+
+// Process refund
 router.post('/payments/refund', validateRefund, paymentController.refund);
 
-module.exports = router;
+// Legacy endpoint aliases for backward compatibility
+router.post('/payments/intent', validateCreateOrder, paymentController.createPaymentOrder);
+router.post('/payments/confirm', validateVerify, paymentController.verify);
 
+module.exports = router;

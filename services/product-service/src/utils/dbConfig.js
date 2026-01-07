@@ -12,6 +12,17 @@ const getDbConfig = () => {
   const databaseUrl = process.env.DATABASE_URL_PRODUCTS || process.env.DATABASE_URL;
   
   if (databaseUrl) {
+    // For Supabase, we need specific SSL settings to avoid certificate errors
+    // with connection poolers. explicit ssl config overrides param but params might conflict
+    if (databaseUrl.includes('supabase.co') || databaseUrl.includes('supabase.com')) {
+      // Strip sslmode from URL if present to let the ssl object control configuration
+      const cleanUrl = databaseUrl.replace(/(\?|&)sslmode=[^&]*/, '');
+      return {
+        connectionString: cleanUrl,
+        ssl: { rejectUnauthorized: false }
+      };
+    }
+
     return {
       connectionString: databaseUrl,
     };

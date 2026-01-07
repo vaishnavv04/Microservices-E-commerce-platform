@@ -129,6 +129,7 @@ services:
       DB_USER: ${POSTGRES_USER:-postgres}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       DATABASE_URL_USERS: ${DATABASE_URL_USERS}
+      NODE_PATH: /app/node_modules
     ports:
       - "3001:3001"
     depends_on:
@@ -164,6 +165,7 @@ services:
       DB_USER: ${POSTGRES_USER:-postgres}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       DATABASE_URL_PRODUCTS: ${DATABASE_URL_PRODUCTS}
+      NODE_PATH: /app/node_modules
     ports:
       - "3002:3002"
     depends_on:
@@ -196,6 +198,7 @@ services:
       REDIS_URL: redis://redis:6379
       USER_SERVICE_URL: http://user-service:3001
       PRODUCT_SERVICE_URL: http://product-service:3002
+      NODE_PATH: /app/node_modules
     ports:
       - "3003:3003"
     depends_on:
@@ -238,6 +241,7 @@ services:
       PAYMENT_SERVICE_URL: http://payment-service:3005
       NOTIFICATION_SERVICE_URL: http://notification-service:3006
       PRODUCT_SERVICE_URL: http://product-service:3002
+      NODE_PATH: /app/node_modules
     ports:
       - "3004:3004"
     depends_on:
@@ -274,6 +278,7 @@ services:
       STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-pk_test_your_stripe_publishable_key}
       RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID:-}
       RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET:-}
+      NODE_PATH: /app/node_modules
     ports:
       - "3005:3005"
     networks:
@@ -305,6 +310,7 @@ services:
       TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-your_twilio_account_sid}
       TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-your_twilio_auth_token}
       TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER:-your_twilio_phone_number}
+      NODE_PATH: /app/node_modules
     ports:
       - "3006:3006"
     networks:
@@ -338,6 +344,7 @@ services:
       ORDER_SERVICE_URL: http://order-service:3004
       PAYMENT_SERVICE_URL: http://payment-service:3005
       NOTIFICATION_SERVICE_URL: http://notification-service:3006
+      NODE_PATH: /app/node_modules
     ports:
       - "8000:8000"
     depends_on:

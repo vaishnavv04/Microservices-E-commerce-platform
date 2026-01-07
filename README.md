@@ -4,10 +4,11 @@ A scalable e-commerce platform built with microservices architecture using Node.
 
 ## Architecture
 
-The platform consists of 7 services:
+The platform consists of 8 components:
 
 | Service | Port | Database | Description |
 |---------|------|----------|-------------|
+| **Frontend** | 3000 | - | React-based web application |
 | **API Gateway** | 8000 | - | Central entry point for all API requests |
 | **User Service** | 3001 | PostgreSQL | User registration, authentication, and profiles |
 | **Product Service** | 3002 | PostgreSQL | Product listings, categories, and inventory |
@@ -20,44 +21,71 @@ The platform consists of 7 services:
 
 - Node.js 18+
 - Docker and Docker Compose
-- PostgreSQL 15+ (or use Docker Compose)
-- Redis 7+ (or use Docker Compose)
+- PostgreSQL 15+ (or use Supabase/Docker)
+- Redis 7+ (or use Docker)
 - **Optional:** Razorpay account (mock mode available)
 - **Optional:** SendGrid account (mock mode available)
 - **Optional:** Twilio account (mock mode available)
 
 ## Quick Start
 
-### Option 1: Docker Compose (Recommended)
+### Option 1: Local Development (Recommended for Development)
+
+**Step 1: Setup Environment**
+```bash
+cp env.example .env
+# Edit .env with your DATABASE_URL and JWT_SECRET
+```
+
+**Step 2: Install Dependencies**
+```powershell
+# Windows PowerShell
+npm install
+Get-ChildItem -Path services -Directory | ForEach-Object { Set-Location $_.FullName; npm install; Set-Location ..\..; }
+cd ecommerce-frontend && npm install && cd ..
+```
 
 ```bash
-# 1. Clone and setup environment
-cp env.example .env
-# Edit .env with your configuration
+# Linux/Mac
+npm install
+for dir in services/*/; do cd "$dir" && npm install && cd ../..; done
+cd ecommerce-frontend && npm install && cd ..
+```
 
-# 2. Start all services (use --build to rebuild images)
+**Step 3: Start Redis**
+```bash
+docker run -d --name redis-ecommerce -p 6379:6379 redis:alpine
+```
+
+**Step 4: Start Backend Services**
+```bash
+node start-services.js
+```
+
+**Step 5: Start Frontend** (in a new terminal)
+```bash
+cd ecommerce-frontend
+npm start
+```
+
+**Access the Application:**
+- Frontend: http://localhost:3000
+- API Gateway: http://localhost:8000
+
+### Option 2: Docker Compose (Full Stack)
+
+```bash
+# 1. Setup environment
+cp env.example .env
+
+# 2. Start all services
 docker-compose up -d --build
 
-# 3. Verify services are running
+# 3. Verify services
 docker-compose ps
 ```
 
 All services will be available at `http://localhost:8000` via the API Gateway.
-
-### Option 2: Local Development
-
-```bash
-# 1. Install dependencies
-.\setup.ps1          # Windows PowerShell
-# OR
-./setup.sh           # Linux/Mac
-
-# 2. Start databases with Docker
-docker-compose up -d postgres-users postgres-products postgres-orders redis
-
-# 3. Start services locally
-npm start
-```
 
 ## API Endpoints
 

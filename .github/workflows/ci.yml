@@ -1,0 +1,141 @@
+# CI/CD Pipeline for E-Commerce Microservices Platform
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, frontend, develop]
+  pull_request:
+    branches: [main, frontend]
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  # Run tests for all microservices
+  test:
+    name: Test Services
+    runs-on: ubuntu-latest
+    
+    services:
+      redis:
+        image: redis:alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    strategy:
+      matrix:
+        service:
+          - user-service
+          - product-service
+          - cart-service
+          - order-service
+          - payment-service
+          - notification-service
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: services/${{ matrix.service }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: services/${{ matrix.service }}
+        run: npm ci
+
+      - name: Run linter (if available)
+        working-directory: services/${{ matrix.service }}
+        run: npm run lint --if-present
+
+      - name: Run tests
+        working-directory: services/${{ matrix.service }}
+        run: npm test --if-present
+        env:
+          NODE_ENV: test
+          JWT_SECRET: test-secret-key
+          REDIS_URL: redis://localhost:6379
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+
+  # Test the frontend
+  test-frontend:
+    name: Test Frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ecommerce-frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ecommerce-frontend
+        run: npm ci
+
+      - name: Run linter (if available)
+        working-directory: ecommerce-frontend
+        run: npm run lint --if-present
+
+      - name: Run tests
+        working-directory: ecommerce-frontend
+        run: npm test --if-present -- --watchAll=false
+        env:
+          CI: true
+
+      - name: Build frontend
+        working-directory: ecommerce-frontend
+        run: npm run build
+
+  # Build Docker images
+  build-docker:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: [test, test-frontend]
+    if: github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build all services
+        run: |
+          docker compose build --parallel
+
+      - name: Verify images built
+        run: |
+          docker images | grep -E "(user-service|product-service|cart-service|order-service|payment-service|notification-service|gateway|frontend)"
+
+  # Security scanning
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run npm audit on all services
+        run: |
+          for dir in services/*/; do
+            echo "Auditing $(basename $dir)..."
+            cd "$dir"
+            npm audit --audit-level=high || true
+            cd ../..
+          done
